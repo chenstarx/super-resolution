@@ -33,25 +33,59 @@ apiRoute.use(upload.array('file'));
 
 apiRoute.post((req, res) => {
   
-  const inputPath = `../app/dist/inputs/${req.files[0].filename}`;
-  const outputPath = `../app/dist/outputs/hr_${req.files[0].filename}`;
-  exec(`python inference.py ${inputPath} ${outputPath}`, {
-    cwd: '../runner/'
+  const fileName = req.files[0].filename;
+
+  const splitted = fileName.split('.');
+  const fileType = splitted.pop();
+  
+  const inputPath = `../app/dist/inputs/${fileName}`;
+  const outputDir = `../app/dist/outputs/`;
+
+  exec(`python inference_realesrgan.py -n RealESRGAN_x4plus -i '${inputPath}' -o '${outputDir}' --outscale 4`, {
+    cwd: '../esrgan/'
   }, (error, stdout, stderr) => {
-    if (error) {
-      res.status(500).json({ error: 'Inference Error' });
-      return;
+    
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = formatNum(date.getMonth() + 1);
+    const day = formatNum(date.getDate());
+    const hour = formatNum(date.getHours());
+    const min = formatNum(date.getMinutes());
+    const sec = formatNum(date.getSeconds());
+    const timeStr = `${year}-${month}-${day} ${hour}:${min}:${sec}`;
+
+    if (stdout.includes('Error')) {
+      console.log(`Error at ${timeStr} |`, stdout);
+      return res.status(500).json({ error: stdout });
     }
 
-    const { size } = fs.statSync(outputPath);
+    if (error) {
+      console.log(`Error at ${timeStr} |`, stderr);
+      return res.status(500).json({ error: 'Inference Error' });
+    }
 
-    res.writeHead(200, {
-        'Content-Type': 'audio/mpeg',
-        'Content-Length': size
-    });
+    try {
+      let nameBody = '';
+      for (let name of splitted) {
+        nameBody += name + '.';
+      }
+      const namePrefix = nameBody.slice(0, nameBody.length - 1);
+      const outputPath = `${outputDir}${namePrefix}_out.${fileType}`;
 
-    const readStream = fs.createReadStream(outputPath);
-    readStream.pipe(res);
+      const { size } = fs.statSync(outputPath);
+
+      res.writeHead(200, {
+          'Content-Type': 'audio/mpeg',
+          'Content-Length': size
+      });
+
+      console.log(`${timeStr} | ${namePrefix}_out.${fileType}`);
+
+      const readStream = fs.createReadStream(outputPath);
+      readStream.pipe(res);
+    } catch(e) {
+      res.status(500).json({ error: 'Output image error' });
+    }
 
   });
 });
