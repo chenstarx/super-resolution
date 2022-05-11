@@ -14,7 +14,8 @@ const upload = multer({
       const day = formatNum(date.getDate());
       const hour = formatNum(date.getHours());
       const min = formatNum(date.getMinutes());
-      const prefix = `${month}${day}${hour}${min}`;
+      const random = Math.floor(Math.random() * 10000) % 10000;
+      const prefix = `${month}${day}${hour}${min}_${random}`;
       return cb(null, `${prefix}_${file.originalname}`);
     }
   }),
