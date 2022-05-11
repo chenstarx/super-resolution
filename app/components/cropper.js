@@ -28,7 +28,7 @@ function ImageCropper(props) {
         crop,
         'cropped_image.jpeg' // destination filename
       );
-      onCropped(croppedImage, crop.height / crop.width);
+      onCropped(croppedImage);
     }
   }
 

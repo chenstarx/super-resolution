@@ -132,11 +132,10 @@ const Home = () => {
   // TODO: how react handle useState(1) with const
   const [cropDone, setCropDone] = useState(false)
   const cropImgData = {}
-  const getCroppedImage = (imageFile, cropRatio) => {
+  const getCroppedImage = (imageFile) => {
     const reader = new FileReader()
     reader.addEventListener('load', () => {
       cropImgData.src = reader.result
-      cropImgData.ratio = cropRatio
       cropImgData.file = imageFile
     });
     console.log(imageFile)
@@ -146,7 +145,6 @@ const Home = () => {
   const onCropConfirm = () => {
     console.log(cropImgData)
     setImgSrc(cropImgData.src)
-    setRatio(cropImgData.ratio)
     setFiles([cropImgData.file])
     setCropDone(true)
   }
@@ -157,7 +155,7 @@ const Home = () => {
       <Cropper
         imgSrc={imgSrc}
         imgRatio={ratio}
-        onCropped={(file, ratio) => getCroppedImage(file, ratio)}
+        onCropped={(file) => getCroppedImage(file)}
         width={imgWidth}
         height={imgWidth * ratio}
       />
