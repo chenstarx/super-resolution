@@ -32,6 +32,11 @@ const apiRoute = nextConnect({
 apiRoute.use(upload.array('file'));
 
 apiRoute.post((req, res) => {
+
+  const mode = req.body.mode || '';
+  const useModel = {
+    'Anime': 'RealESRGAN_x4plus_anime_6B'
+  }[mode] || 'RealESRGAN_x4plus';
   
   const fileName = req.files[0].filename;
 
@@ -41,7 +46,7 @@ apiRoute.post((req, res) => {
   const inputPath = `../app/dist/inputs/${fileName}`;
   const outputDir = `../app/dist/outputs/`;
 
-  exec(`python inference_realesrgan.py -n RealESRGAN_x4plus -i '${inputPath}' -o '${outputDir}' --outscale 4`, {
+  exec(`python inference_realesrgan.py -n ${useModel} -i '${inputPath}' -o '${outputDir}' --outscale 4`, {
     cwd: '../esrgan/'
   }, (error, stdout, stderr) => {
     
@@ -83,8 +88,10 @@ apiRoute.post((req, res) => {
 
       const readStream = fs.createReadStream(outputPath);
       readStream.pipe(res);
-    } catch(e) {
-      res.status(500).json({ error: 'Output image error' });
+
+    } catch(err) {
+      console.log(err);
+      res.status(500).json({ error: 'Error at processing image' });
     }
 
   });
