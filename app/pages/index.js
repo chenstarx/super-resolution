@@ -11,6 +11,7 @@ import AppBar from '@mui/material/AppBar';
 import CssBaseline from '@mui/material/CssBaseline';
 import Toolbar from '@mui/material/Toolbar';
 import List from '@mui/material/List';
+import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import ListItem from '@mui/material/ListItemButton';
@@ -59,18 +60,22 @@ const Home = () => {
       if (file.size > 524288) return alert('File size should be smaller than 500 KB');
 
       // Display image on the page
+      const reader = new FileReader()
       const img = document.createElement("img");
       img.onload = () => {
-          setRatio(img.naturalHeight / img.naturalWidth)
-          setStatus(1)
+        const width = img.naturalWidth
+        const height = img.naturalHeight
+        if (width > 500 || height > 500) {
+          return alert('Image should be smaller than 500 x 500')
+        }
+        setRatio(height / width)
+        setImgSrc(reader.result)
+        setStatus(1)
       }
 
       // Read selected image
-      const reader = new FileReader()
       reader.addEventListener('load', () => {
-        const src = reader.result
-        img.src = src
-        setImgSrc(src)
+        img.src = reader.result
       });
       reader.readAsDataURL(file)
 
@@ -90,7 +95,7 @@ const Home = () => {
     data.append('file', file)
 
     const mode = {
-      0: 'Photo',
+      0: 'Normal',
       1: 'Anime',
       2: 'Crop'
     }[tab] || ''
@@ -170,7 +175,7 @@ const Home = () => {
     </>
 
   const tabItems = [
-    ['Photo', <PhotoIcon key={0} />],
+    ['Normal', <PhotoIcon key={0} />],
     ['Anime', <AnimeIcon key={1} />],
     ['Crop', <CropIcon key={2} />],
     ['Divider'],
@@ -232,9 +237,6 @@ const Home = () => {
     <Dropzone
       onDrop={onSelectFile}
       accept={{'image/*': ['.png', '.jpg', '.jpeg']}}
-      minSize={1024}
-      maxSize={1048576}
-      maxFiles={1}
     >
       {({
         getRootProps,
@@ -263,6 +265,38 @@ const Home = () => {
     </Dropzone>
   </>
 
+  const About = () => <>
+    <div className={styles.main}>
+      <Typography variant="h5" gutterBottom component="div">
+        About the App
+      </Typography>
+      <Typography style={{ marginTop: '10px' }} variant="body1" gutterBottom>
+        This is a course project of ECE-GY 6123 by Prof. Wang in NYU Tandon
+      </Typography>
+      <Typography style={{ marginTop: '10px' }} variant="subtitle1" gutterBottom component="div">
+        <b>Tech Stack</b>
+      </Typography>
+      <Typography variant="body1" gutterBottom>
+        · Model: ESRGAN<br/>
+        · Frontend: React + MUI, powered by Next.js<br/>
+        · Backend: Node.js + Python + PyTorch<br/>
+        · Served in Google Cloud Platform using Compute Engine with GPU
+      </Typography>
+      <Typography style={{ marginTop: '12px' }} variant="subtitle1" gutterBottom component="div">
+        <b>Author</b>
+      </Typography>
+      <Typography variant="body1" gutterBottom>
+        Liqi Chen
+      </Typography>
+      <Typography style={{ marginTop: '12px' }} variant="subtitle1" gutterBottom component="div">
+        <b>GitHub</b>
+      </Typography>
+      <Link href="https://github.com/chenstarx/super-resolution">
+        https://github.com/chenstarx/super-resolution
+      </Link>
+    </div>
+  </>
+
   return (
     <div className={styles.page}>
       <Head>
@@ -278,9 +312,9 @@ const Home = () => {
             <Typography variant="h6" noWrap component="div">
               Real-Time Image Super Resolution ---
               {{
-                0: ' Photo Mode',
-                1: ' Anime Mode',
-                2: ' Image Crop Mode',
+                0: ' Normal Mode',
+                1: ' Anime Optimized',
+                2: ' Image Cropping',
                 4: ' About',
               }[tab]}
             </Typography>
@@ -319,9 +353,7 @@ const Home = () => {
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
           {
             tab === 4 &&
-            <div className={styles.main}>
-              About
-            </div>
+            <About />
           }
           { tab < 3 &&
           <div className={styles.main}>
@@ -373,14 +405,14 @@ const Home = () => {
                 tab === 1 && status === 0 &&
                 <Alert severity="info" style={{ marginTop: '28px' }}>
                   <AlertTitle>Anime Mode</AlertTitle>
-                  This mode is optimized for <strong>Anime</strong>, <strong>Carton</strong>, or <strong>Meme</strong> images.
+                  This mode is optimized for <strong>Anime</strong> or <strong>Carton</strong> images.
                 </Alert>
               }
               {
                 tab === 2 && status === 0 &&
                 <Alert severity="info" style={{ marginTop: '28px' }}>
                   <AlertTitle>Crop Mode</AlertTitle>
-                  You can <strong>crop</strong> the photo in this mode, the app will only process the cropped part.
+                  You can select and <strong>crop</strong> the image, the app will only process the cropped part.
                 </Alert>
               }
               {
